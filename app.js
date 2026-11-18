@@ -9,8 +9,8 @@ function renderList(){let s=saved(),checks=s[profile]||[];$('#listTitle').textCo
 $$('[data-profile]').forEach(b=>b.onclick=()=>{profile=b.dataset.profile;$$('[data-profile]').forEach(x=>x.classList.toggle('selected',x===b));renderList()});$('#reset').onclick=()=>{let s=saved();s[profile]=[];localStorage.setItem('sos-checks',JSON.stringify(s));renderList();updateHome()};
 function updateHome(){let s=saved(),n=0,t=0;Object.keys(data).forEach(p=>{n+=(s[p]||[]).length;t+=data[p].length});$('#count').textContent=n;$('#percent').textContent=Math.round(n/t*100)+'%';$('#bar').style.width=(n/t*100)+'%'}
 function renderMeds(){let names=Object.keys(meds);$('#medTabs').innerHTML=names.map(n=>`<button class="${n===medProfile?'active':''}" data-med="${n}">${meds[n][0]} ${n}</button>`).join('');$$('[data-med]').forEach(b=>b.onclick=()=>{medProfile=b.dataset.med;renderMeds()});let m=meds[medProfile];$('#medDetail').innerHTML=`<h2>${m[0]} ${medProfile}</h2><h3>Información general</h3><ul>${m[1].map(x=>`<li>${x}</li>`).join('')}</ul><div class="notice warning">⚠️ <div><b>Advertencia</b><p>${m[2]}</p></div></div>`}
-const guides={sismo:['Qué hacer ante un sismo',['Antes: fija muebles pesados y acuerda rutas de salida.','Durante: mantén la calma, protégete y aléjate de ventanas. Sigue las instrucciones oficiales.','Después: evacúa si es necesario y revisa información oficial.']],lluvia:['Lluvias e inundaciones',['Evita cruzar calles inundadas o corrientes de agua.','Aléjate de cables caídos y zonas con riesgo de deslizamiento.','Sigue las alertas oficiales y evacúa si se indica.']],incendio:['Prevención de incendios',['Mantén libres las salidas y conoce las rutas de evacuación.','Si hay humo o fuego, aléjate y pide ayuda.','No regreses al edificio hasta que las autoridades lo permitan.']]};
-$$('[data-guide]').forEach(b=>b.onclick=()=>{$('#guideResult').classList.remove('hidden');let g=guides[b.dataset.guide];$('#guideResult').innerHTML=`<h2>${g[0]}</h2><ul>${g[1].map(t=>`<li>${t}</li>`).join('')}</ul><p class="tiny">Guía general. Sigue las indicaciones oficiales.</p>`;$('#guideResult').scrollIntoView({behavior:'smooth'})});
+const guides={sismo:['Qué hacer ante un sismo',['Antes: identifica zonas seguras, asegura muebles y acuerda un punto de encuentro. Ten lista tu mochila de emergencia.','Durante: mantén la calma, protégete en un lugar seguro y aléjate de ventanas. Sigue las indicaciones oficiales.','Después: revisa si hay daños, aléjate de estructuras afectadas y evacúa si las autoridades lo indican.']],lluvia:['Lluvias e inundaciones',['Evita cruzar calles inundadas o corrientes de agua.','Aléjate de cables caídos y zonas con riesgo de deslizamiento.','Sigue las alertas oficiales y evacúa si se indica.']],incendio:['Prevención y respuesta ante incendios',['Antes: revisa instalaciones con personas adultas responsables, mantén libres las salidas y conoce las rutas de evacuación.','Durante: aléjate del fuego y del humo, avisa a un adulto o a los servicios de emergencia y sigue la ruta segura indicada.','Después: no regreses al lugar hasta que las autoridades confirmen que es seguro.']]};
+
 function updateLayers(){$$('.risk').forEach(e=>e.classList.toggle('hidden',!$('#riskToggle').checked));$$('.safe').forEach(e=>e.classList.toggle('hidden',!$('#safeToggle').checked));$('#meetingpin').style.display=$('#meetToggle').checked&&localStorage.getItem('sos-meeting')?'grid':'none'}
 ['riskToggle','safeToggle','meetToggle'].forEach(id=>$('#'+id).onchange=updateLayers);
 $('#saveMeeting').onclick=()=>{let v=$('#meeting').value.trim();if(!v){$('#meetingStatus').textContent='Escribe un nombre para el punto.';return}localStorage.setItem('sos-meeting',v);$('#meetingStatus').textContent='Punto guardado: '+v;updateLayers()};
@@ -18,7 +18,7 @@ if(localStorage.getItem('sos-meeting')){$('#meeting').value=localStorage.getItem
 function locate(el){if(!navigator.geolocation){el.textContent='Este navegador no permite obtener ubicación.';return}el.textContent='Solicitando permiso…';navigator.geolocation.getCurrentPosition(p=>{coords=`Latitud: ${p.coords.latitude.toFixed(5)}, longitud: ${p.coords.longitude.toFixed(5)}`;el.textContent=coords;$('#you').style.left='49%';$('#you').style.top='48%'},()=>el.textContent='No se pudo obtener la ubicación. Revisa permisos y conexión.',{timeout:10000})}
 $('#locate').onclick=()=>locate($('#locationResult'));$('#getCoords').onclick=()=>locate($('#coords'));$('#copy').onclick=async()=>{if(!coords){$('#coords').textContent='Primero solicita la ubicación.';return}try{await navigator.clipboard.writeText(coords);$('#coords').textContent=coords+' (copiado)'}catch(e){$('#coords').textContent=coords+' — selecciona el texto para copiarlo.'}};
 $('#sound').onclick=()=>{try{let A=window.AudioContext||window.webkitAudioContext;ctx=new A();osc=ctx.createOscillator();let g=ctx.createGain();osc.frequency.value=880;g.gain.value=.12;osc.connect(g);g.connect(ctx.destination);osc.start();$('#sound').textContent='🔊 Sonido activado'}catch(e){alert('No se pudo iniciar el sonido en este dispositivo.')}};function stop(){if(osc){try{osc.stop()}catch(e){}osc=null}if(ctx){ctx.close();ctx=null}$('#sound').textContent='▶ Reproducir sonido'}$('#stop').onclick=stop;window.addEventListener('beforeunload',stop);
-$('#savePlan').onclick=()=>{localStorage.setItem('sos-plan',$('#familyPlan').value);$('#planStatus').textContent='Plan guardado en este navegador.'};$('#familyPlan').value=localStorage.getItem('sos-plan')||'';renderList();renderMeds();updateHome();updateLayers();
+renderList();renderMeds();updateHome();updateLayers();
 // Mi familia: datos guardados localmente en este dispositivo.
 function getMembers(){try{return JSON.parse(localStorage.getItem('sos-family')||'[]')}catch(e){return []}}
 function renderMembers(){const box=$('#familyList');if(!box)return;const a=getMembers();box.innerHTML=a.length?a.map((m,i)=>`<div class="member-row"><div><b>${escapeText(m.name)}</b><small>${escapeText(m.profile)} · ${escapeText(m.needs||'Sin necesidades registradas')}</small></div><button data-remove-member="${i}" aria-label="Eliminar integrante">Eliminar</button></div>`).join(''):'<p class="tiny">Aún no agregas integrantes.</p>';$$('[data-remove-member]').forEach(b=>b.onclick=()=>{let x=getMembers();x.splice(+b.dataset.removeMember,1);localStorage.setItem('sos-family',JSON.stringify(x));renderMembers()})}
@@ -49,3 +49,56 @@ tsunami:['Tsunamis',['Antes: conoce las rutas de evacuación y zonas altas indic
 tormenta:['Tormentas eléctricas',['Antes: revisa los avisos meteorológicos y planifica dónde refugiarte.','Durante: entra a una edificación segura, aléjate de árboles aislados y evita espacios abiertos.','Después: espera a que pase la tormenta y mantente atento a las indicaciones oficiales.']]
 });
 $$('[data-guide]').forEach(b=>b.onclick=()=>{let g=guides[b.dataset.guide];if(!g)return;$('#guideResult').classList.remove('hidden');$('#guideResult').innerHTML='<h2>'+g[0]+'</h2>'+g[1].map((t,i)=>'<div class="guide-step"><b>'+['ANTES','DURANTE','DESPUÉS'][i]+'</b><p>'+t+'</p></div>').join('')+'<p class="tiny">Guía general. Sigue siempre las indicaciones de las autoridades.</p>';$('#guideResult').scrollIntoView({behavior:'smooth'})});
+
+// TIENDA S.O.S.: catálogo demostrativo para explicar la fuente de ingresos del emprendimiento.
+const shopCart=[];
+function renderShopCart(){
+  const count=document.querySelector('#cartCount');
+  const items=document.querySelector('#cartItems');
+  if(count) count.textContent=shopCart.length;
+  if(items) items.textContent=shopCart.length ? shopCart.map((p,i)=>`${i+1}. Mochila ${p}`).join(' · ') : 'Todavía no has seleccionado productos.';
+}
+document.querySelectorAll('[data-product]').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    const p=btn.dataset.product;
+    shopCart.push(p);
+    renderShopCart();
+    btn.textContent='✓ Agregada';
+    btn.classList.add('added');
+    setTimeout(()=>{btn.textContent='Agregar a mi selección';btn.classList.remove('added')},1400);
+  });
+});
+const clearCart=document.querySelector('#clearCart');
+if(clearCart) clearCart.addEventListener('click',()=>{shopCart.length=0;renderShopCart()});
+renderShopCart();
+
+// Señal hablada de ayuda: se repite hasta que la persona pulse Detener.
+let sosSpeechActive=false;
+function speakSOS(){
+  if(!sosSpeechActive || !('speechSynthesis' in window)) return;
+  window.speechSynthesis.cancel();
+  const utterance=new SpeechSynthesisUtterance('¡Ayuda, ayuda!');
+  utterance.lang='es-ES'; utterance.rate=0.9; utterance.pitch=1.1; utterance.volume=1;
+  utterance.onend=()=>{if(sosSpeechActive) setTimeout(speakSOS,850)};
+  utterance.onerror=()=>{sosSpeechActive=false};
+  window.speechSynthesis.speak(utterance);
+}
+const soundButton=document.querySelector('#sound');
+const stopButton=document.querySelector('#stop');
+if(soundButton){
+  soundButton.textContent='🆘 Activar voz de ayuda';
+  soundButton.addEventListener('click',()=>{
+    if(!('speechSynthesis' in window)){alert('Este navegador no permite voz automática.');return}
+    sosSpeechActive=true; speakSOS();
+    soundButton.textContent='🆘 Ayuda activada';
+  });
+}
+if(stopButton){
+  stopButton.textContent='Detener';
+  stopButton.addEventListener('click',()=>{
+    sosSpeechActive=false;
+    if('speechSynthesis' in window) window.speechSynthesis.cancel();
+    stopButton.textContent='Detener';
+    if(soundButton) soundButton.textContent='🆘 Activar voz de ayuda';
+  });
+}
